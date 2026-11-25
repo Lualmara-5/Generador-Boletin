@@ -27,7 +27,7 @@ function newsCard(item, cellWidth = "50%") {
     style="padding:8px;width:${cellWidth};">
     <table style="width:100%;border:1px solid #e5eaf0;
       border-radius:10px;overflow:hidden;
-      border-collapse:separate;background-color:#ffffff;"
+      border-collapse:separate;background-color:#ffffff;height:100%;"
       role="presentation" cellpadding="0" cellspacing="0" border="0">
 
       <tr>
@@ -42,7 +42,7 @@ function newsCard(item, cellWidth = "50%") {
       </tr>
 
       <tr>
-        <td style="padding:16px;font-family:${font};">
+        <td valign="top" height="100%" style="padding:16px;font-family:${font};height:100%;">
           ${p(esc(item.category), "margin:0 0 9px;color:#159c9a;font-size:10px;font-weight:bold;letter-spacing:1px;")}
 
           <h3 style="margin:0 0 10px;color:#102c4e;font-size:17px;line-height:1.4;font-family:${font};">
@@ -58,30 +58,86 @@ function newsCard(item, cellWidth = "50%") {
   </td>`;
 }
 
+const monthLabels = [
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DIC",
+];
+
+function parseLocalDate(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+    ? date
+    : null;
+}
+
+function formatEventDate(item) {
+  const start = parseLocalDate(item.startDate);
+  const end = parseLocalDate(item.endDate);
+  if (!start) return { month: "", day: "" };
+
+  const startMonth = monthLabels[start.getMonth()];
+  const startDay = start.getDate();
+  if (!end || end.getTime() <= start.getTime()) {
+    return { month: startMonth, day: String(startDay) };
+  }
+
+  const endMonth = monthLabels[end.getMonth()];
+  return {
+    month:
+      start.getMonth() === end.getMonth() &&
+      start.getFullYear() === end.getFullYear()
+        ? startMonth
+        : `${startMonth} - ${endMonth}`,
+    day: `${startDay} - ${end.getDate()}`,
+  };
+}
+
+function formatTime(value) {
+  if (!value || !/^\d{2}:\d{2}$/.test(value)) return "";
+  const [hour, minute] = value.split(":").map(Number);
+  if (hour > 23 || minute > 59) return "";
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
 function eventCell(item, cellWidth = "25%") {
+  const date = formatEventDate(item);
+  const startTime = formatTime(item.startTime);
+  const endTime = formatTime(item.endTime);
+  const timeText = startTime
+    ? endTime
+      ? `${startTime} - ${endTime}`
+      : startTime
+    : "";
+  const place = String(item.place || "").trim();
+
   return `
-    <td width="${cellWidth}" valign="top"
-      style="padding:5px;width:${cellWidth};">
-
-      <table role="presentation"
-        width="100%"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        style="width:100%;height:125px;table-layout:fixed;
-        border:1px solid #e4eaf0;border-radius:8px;
+    <td width="${cellWidth}" valign="top" style="padding:5px;width:${cellWidth};">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="width:100%;min-height:160px;border:1px solid #e4eaf0;border-radius:8px;
         border-collapse:separate;background:#fff;">
-
         <tr>
-          <td align="center" valign="middle"
-            style="padding:8px 4px;font-family:${font};">
-
-            ${p(esc(item.month), "color:#159c9a;font-size:10px;font-weight:bold;")}
-
-            ${p(esc(item.day), "margin:5px 0;color:#102c4e;font-size:25px;font-weight:bold;")}
-
-            ${p(esc(item.title), "color:#64748b;font-size:11px;line-height:1.4;")}
-
+          <td align="center" valign="middle" style="padding:12px 7px;font-family:${font};">
+            ${date.month ? p(esc(date.month), "color:#159c9a;font-size:10px;font-weight:bold;") : ""}
+            ${date.day ? p(esc(date.day), "margin:5px 0;color:#102c4e;font-size:25px;font-weight:bold;") : ""}
+            ${p(esc(item.title || ""), "color:#64748b;font-size:11px;line-height:1.4;")}
+            ${timeText ? `<div style="margin-top:8px;color:#526579;font-size:10px;line-height:1.4;font-family:${font};">${esc(timeText)}</div>` : ""}
+            ${place ? `<div style="margin-top:6px;color:#526579;font-size:10px;line-height:1.4;font-family:${font};">${esc(place)}</div>` : ""}
           </td>
         </tr>
       </table>

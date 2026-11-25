@@ -111,3 +111,12 @@ textarea { resize: vertical; line-height: 1.5; }
   .brand div span { font-size: 9px; }
   .finish-modal { padding: 24px 19px; }
 }
+
+/* Mejoras de interacción para los acordeones del editor */
+.editor-section summary { user-select: none; transition: color .15s ease, background .15s ease; }
+.editor-section summary:hover { color: var(--teal); }
+.editor-section summary:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 5px; }
+.editor-section[open] summary { padding-bottom: 2px; }
+.editor-section summary::after { transition: transform .18s ease; }
+.editor-section[open] summary::after { transform: rotate(180deg); }
+.repeat-grid input[type="date"], .repeat-grid input[type="time"] { min-height: 36px; }
